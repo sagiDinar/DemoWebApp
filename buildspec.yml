@@ -1,39 +1,15 @@
 version: 0.2
-
 env:
-  # Make CodeBuild pull TOKEN from Secrets Manager JSON field tokenForSonar in secret "firstSecret"
   secrets-manager:
     TOKEN: "firstSecret:tokenForSonar"
-
 phases:
   install:
     runtime-versions:
-      # Use a version your image supports. For aws/codebuild/standard:7.0, corretto17 is perfect.
       java: corretto17
     commands:
-      - set -euo pipefail
-      - echo "Java & Maven versions:"
-      - java -version
-      - mvn -v
-
-      # Sanity: ensure TOKEN is present (don't print it)
-      - if [ -z "${TOKEN:-}" ]; then echo "ERROR: TOKEN is empty (secrets-manager wiring/IAM?)" && exit 3; fi
-      - echo "Secrets check: TOKEN present ✔"
-
-      # Quick network reachability (VPCs without NAT will fail here)
-      - echo "Testing connectivity to SonarCloud..."
-      - curl -sS https://sonarcloud.io/api/system/status | head -c 100 || (echo "ERROR: cannot reach sonarcloud.io" && exit 4)
-
-      # Optional: verify project/org exist (no creds needed for public; won’t leak token)
-      # - curl -sS "https://sonarcloud.io/api/organizations/search?organizations=javaprojectawssagi" | head -c 200
-
-      # Export SONAR_TOKEN (the Maven scanner auto-detects this env var)
       - export SONAR_TOKEN="$TOKEN"
-
   build:
     commands:
-      # Use SONAR_TOKEN env var instead of putting the token on the command line
-      # Add -X for Maven debug if needed.
       - mvn verify sonar:sonar \
           -Dsonar.projectKey=javaprojectawssagi \
           -Dsonar.organization=javaprojectawssagi \
