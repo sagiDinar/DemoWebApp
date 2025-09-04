@@ -1,11 +1,20 @@
 version: 0.2
+
 env:
-  secret-manager:
-    TOKEN: firstSecret:tokenForSonar
+  secrets-manager:
+    TOKEN: "firstSecret:tokenForSonar"   # secret-name : json-key
+
 phases:
   install:
     runtime-versions:
-      java: latest
+      # If your image supports runtime selection, this works:
+      java: corretto17
+      # or: java: latest
   build:
     commands:
-      - mvn verify sonar:sonar -Dsonar.projectKey=javaprojectawssagi -Dsonar.organization=javaprojectawssagi -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$TOKEN
+      - mvn -v
+      - mvn verify sonar:sonar \
+          -Dsonar.projectKey=javaprojectawssagi \
+          -Dsonar.organization=javaprojectawssagi \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.token="$TOKEN"
