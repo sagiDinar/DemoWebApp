@@ -11,6 +11,6 @@ phases:
       - mvn verify sonar:sonar -Dsonar.projectKey=javaprojectawssagi -Dsonar.organization=javaprojectawssagi -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$TOKEN 
       - sleep 5
       - |- 
-        quality_status=$(curl -s -u $TOKEN: https://sonarcloud.io/api/qualitygates/project_status?projectKey=javaprojectaws | jq -r '.projectStatus.status')
+        quality_status=$(curl -s -u $TOKEN: https://sonarcloud.io/api/qualitygates/project_status?projectKey=javaprojectawssagi | jq -r '.projectStatus.status')
         echo "SonarCloud analysistatus is $quality_status"; 
         if [ $quality_status = "ERROR" ] ; then exit 1;fi
