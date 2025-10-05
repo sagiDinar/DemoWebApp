@@ -43,21 +43,26 @@ phases:
       - echo "Snyk scan completed — report saved as snyk.html"
 
       # ---------- OWASP ZAP DAST (headless, no Docker) ----------
-      # Ensure Java is present (Ubuntu default-jdk; Amazon Linux Corretto)
+      # Ensure Java is present
       - |
         if command -v apt-get >/dev/null 2>&1; then
           apt-get install -y default-jdk
         elif command -v yum >/dev/null 2>&1; then
           yum install -y java-17-amazon-corretto-headless || yum install -y java-11-amazon-corretto-headless
         fi
-
-      # Download and run ZAP quick scan
+      
+      # Download, extract, and run ZAP quick scan
       - curl -L -o ZAP_2.16.0_Linux.tar.gz https://github.com/zaproxy/zaproxy/releases/download/v2.16.0/ZAP_2.16.0_Linux.tar.gz
       - tar -xzf ZAP_2.16.0_Linux.tar.gz
+      
+      # Target to scan (change to your app URL)
       - export TARGET_URL="https://example.com"
-      # -cmd = headless; -quickprogress logs progress; -maxduration limits runtime (minutes)
-      - ./ZAP_2.16.0/zap.sh -cmd -quickurl "$TARGET_URL" -quickprogress  -quickout zap_report.html || true
-      - test -f zap_report.html || (echo "ZAP did not produce zap_report.html"; exit 1)
+      
+      # Write report to /tmp, then move it to the workspace root
+      - export ZAP_OUT="/tmp/zap_report.html"
+      - ./ZAP_2.16.0/zap.sh -cmd -quickurl "$TARGET_URL" -quickprogress -quickout "$ZAP_OUT" || true
+      - test -f "$ZAP_OUT" || (echo "ZAP did not produce zap_report.html"; exit 1)
+      - mv "$ZAP_OUT" ./zap_report.html
       - echo "ZAP scan completed — report saved as zap_report.html"
 
 artifacts:
