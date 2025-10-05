@@ -56,7 +56,7 @@ phases:
       - tar -xzf ZAP_2.16.0_Linux.tar.gz
       - export TARGET_URL="https://example.com"
       # -cmd = headless; -quickprogress logs progress; -maxduration limits runtime (minutes)
-      - ./ZAP_2.16.0/zap.sh -cmd -quickurl "$TARGET_URL" -quickprogress -maxduration 5 -quickout zap_report.html || true
+      - ./ZAP_2.16.0/zap.sh -cmd -quickurl "$TARGET_URL" -quickprogress  -quickout zap_report.html || true
       - test -f zap_report.html || (echo "ZAP did not produce zap_report.html"; exit 1)
       - echo "ZAP scan completed — report saved as zap_report.html"
 
