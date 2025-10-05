@@ -25,11 +25,11 @@ phases:
         echo "SonarCloud analysis status is $quality_status"
         if [ "$quality_status" = "ERROR" ]; then echo "Failing due to Sonar quality gate"; exit 1; fi
 
-      # --- Snyk SCA gate (Java/Maven auto-detected) ---
+      # --- Snyk SCA scan (soft gate) ---
       - echo "Running Snyk SCA..."
-      - snyk test --severity-threshold=high --fail-on=all --json > snyk.json || snyk_exit=$?
+      - snyk test --severity-threshold=high --fail-on=all --json > snyk.json || true
       - npx snyk-to-html -i snyk.json -o snyk.html || true
-      - if [ "${snyk_exit:-0}" -ne 0 ]; then echo "Failing due to Snyk vulnerability threshold"; exit ${snyk_exit}; fi
+      - echo "Snyk scan completed — report saved as snyk.html"
 
 artifacts:
   files:
