@@ -1,16 +1,39 @@
 version: 0.2
+
 env:
-    secrets-manager:
-      TOKEN: firstSecret:tokenForSonar
+  secrets-manager:
+    TOKEN: firstSecret:tokenForSonar               
+    SNYK_TOKEN: synkAPIKey                         
+                     
+
 phases:
   install:
     runtime-versions:
       java: latest
+      nodejs: 18
+    commands:
+      - npm install -g snyk@latest snyk-to-html@latest
+      - snyk auth "$SNYK_TOKEN" || true
+
   build:
     commands:
-      - mvn verify sonar:sonar -Dsonar.projectKey=javaprojectawssagi -Dsonar.organization=javaprojectawssagi -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$TOKEN 
+      # --- SonarCloud  ---
+      - mvn -B verify sonar:sonar -Dsonar.projectKey=javaprojectawssagi -Dsonar.organization=javaprojectawssagi -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$TOKEN
       - sleep 5
-      - |- 
-        quality_status=$(curl -s -u $TOKEN: https://sonarcloud.io/api/qualitygates/project_status?projectKey=javaprojectawssagi | jq -r '.projectStatus.status')
-        echo "SonarCloud analysistatus is $quality_status"; 
-        if [ $quality_status = "ERROR" ] ; then exit 1;fi
+      - |
+        quality_status=$(curl -s -u $TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?projectKey=javaprojectawssagi" | jq -r '.projectStatus.status')
+        echo "SonarCloud analysis status is $quality_status"
+        if [ "$quality_status" = "ERROR" ]; then echo "Failing due to Sonar quality gate"; exit 1; fi
+
+      # --- Snyk SCA gate (Java/Maven auto-detected) ---
+      - echo "Running Snyk SCA..."
+      - snyk test --severity-threshold=high --fail-on=all --json > snyk.json || snyk_exit=$?
+      - npx snyk-to-html -i snyk.json -o snyk.html || true
+      - if [ "${snyk_exit:-0}" -ne 0 ]; then echo "Failing due to Snyk vulnerability threshold"; exit ${snyk_exit}; fi
+
+artifacts:
+  files:
+    - snyk.json
+    - snyk.html
+    - target/**/*
+  discard-paths: yes
