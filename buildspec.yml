@@ -11,7 +11,7 @@ phases:
       java: latest
       nodejs: 18
     commands:
-      # Tools needed across steps
+      # Tools needed across steps test
       - |
         if command -v apt-get >/dev/null 2>&1; then
           apt-get update -y
